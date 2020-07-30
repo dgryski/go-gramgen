@@ -29,6 +29,17 @@ func main() {
 		log.Fatal("unable to find START")
 	}
 
+	// TODO(dgryski): type-check and ensure all non-terminals are defined
+	// TODO(dgryski): add range, repeat
+	// TODO(dgryski): add variables to rules
+	// TODO(dgryski): what else to pick from dharma syntax?
+	// TODO(dgryski): common library of useful items
+	// TODO(dgryski): add optimization pass to remove extra nonterminal -> terminal steps
+	// TODO(dgryski): add maxdepth param
+	// TODO(dgryski): add "cheapest non-terminal" table for when max depth is exceeded
+	// TODO(dgryski): add better error messages for parsing ruleset
+	// TODO(dgryski): update syntax to match cup?
+
 	rand.Seed(time.Now().UnixNano())
 
 	g.generate(os.Stdout)
