@@ -39,6 +39,7 @@ func main() {
 	// TODO(dgryski): add "cheapest non-terminal" table for when max depth is exceeded
 	// TODO(dgryski): add better error messages for parsing ruleset
 	// TODO(dgryski): update syntax to match cup?
+	// TODO(dgryski): support "\"" and "\n" in lexer
 
 	rand.Seed(time.Now().UnixNano())
 
