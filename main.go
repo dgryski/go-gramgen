@@ -28,7 +28,11 @@ func main() {
 		log.Fatal("unable to find START")
 	}
 
-	// TODO(dgryski): type-check and ensure all non-terminals are defined
+	err := typecheck(symtab, g)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// TODO(dgryski): add range, repeat
 	// TODO(dgryski): add variables to rules
 	// TODO(dgryski): what else to pick from dharma syntax?
@@ -43,4 +47,43 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	g.generate(os.Stdout)
+}
+
+func typecheck(symtab map[string]generator, sym generator) error {
+	// typecheck the tree rooted at sym
+	// look for undefined symbols in the rules
+
+	switch s := sym.(type) {
+	case terminal:
+	case intrange:
+	case chrange:
+	case epsilon:
+
+	case choice:
+		for _, i := range s {
+			if err := typecheck(symtab, i); err != nil {
+				return err
+			}
+		}
+
+	case sequence:
+		for _, i := range s {
+			if err := typecheck(symtab, i); err != nil {
+				return err
+			}
+		}
+
+	case variable:
+		s2, ok := symtab[string(s)]
+		if !ok {
+			return fmt.Errorf("unknown symbol: %v", s)
+		}
+
+		return typecheck(symtab, s2)
+
+	default:
+		panic("unknown generator type")
+	}
+
+	return nil
 }
