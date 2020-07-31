@@ -1,4 +1,5 @@
 //go:generate ragel-go lexer.rl
+//go:generate gofmt -w lexer.go
 //go:generate goyacc parser.y
 
 package main
@@ -15,12 +16,10 @@ import (
 func main() {
 
 	data, _ := ioutil.ReadAll(os.Stdin)
-	tokens := lex(data)
+	l := lex(data)
 
-	l := fuzzLexer(tokens)
-
-	if yyParse(&l) != 0 {
-		fmt.Println("parse error")
+	if yyParse(l) != 0 {
+		// don't log; yyError() has already done so
 		return
 	}
 

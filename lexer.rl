@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 )
 
 %% machine scanner;
@@ -10,9 +10,10 @@ import (
 type tok struct {
     t int
     yy yySymType
+    lineno int
 }
 
-func lex(data []byte) []tok {
+func lex(data []byte) *fuzzLexer {
 
 	cs, p, pe, eof := 0, 0, len(data), len(data)
 	ts, te, act := 0, 0, 0
@@ -24,11 +25,11 @@ func lex(data []byte) []tok {
 	var tokens []tok
 
 	add := func(t int) {
-	    tokens = append(tokens, tok{t:t})
+	    tokens = append(tokens, tok{t:t, lineno:lineno})
 	}
 
 	addstr := func(t int, s string) {
-	    tokens = append(tokens, tok{t:t, yy:yySymType{s:s}})
+	    tokens = append(tokens, tok{t:t, yy:yySymType{s:s}, lineno:lineno})
 	}
 
 	%%{
@@ -49,21 +50,24 @@ func lex(data []byte) []tok {
 	    write exec;
 	}%%
 
-	return tokens
+	return &fuzzLexer{toks:tokens}
 }
 
-type fuzzLexer []tok
+type fuzzLexer struct {
+	t tok
+	toks []tok
+}
 
 func (f *fuzzLexer) Lex(lval *yySymType) int  {
-    if len(*f) == 0 {
+    if len(f.toks) == 0 {
 	    return 0
     }
-    t := (*f)[0]
-    *f = (*f)[1:]
-    *lval = t.yy
-    return t.t
+    f.t = f.toks[0]
+    f.toks = f.toks[1:]
+    *lval = f.t.yy
+    return f.t.t
 }
 
 func (f *fuzzLexer) Error(s string) {
-    fmt.Println("syntax error:", s)
+    log.Fatalf("syntax error at line %d: %v\n", f.t.lineno, s)
 }
