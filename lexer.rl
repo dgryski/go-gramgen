@@ -41,7 +41,7 @@ func lex(data []byte) *fuzzLexer {
 		'"' [^"]* '"'  => { addstr(tQSTRING, string(data[ts+1:te-1])) };
 		[ \t] => { };
 		'\n' => { lineno++ };
-		[A-Za-z_][A-Za-z0-9_]* {
+		(alpha | '_') (alnum | '_')* {
 			addstr(tID, string(data[ts:te]))
 		};
 	    *|;
