@@ -5,6 +5,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -14,6 +16,8 @@ import (
 	"os"
 	"runtime/pprof"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 func main() {
@@ -21,6 +25,7 @@ func main() {
 	maxDepth := flag.Int("m", 8, "max recursion depth")
 	input := flag.String("f", "", "input file")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
+	benchmark := flag.Bool("bench", false, "run benchmark")
 	flag.Parse()
 
 	if *cpuprofile != "" {
@@ -104,7 +109,27 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	g.generate(os.Stdout, *maxDepth)
+	if *benchmark {
+		var buf bytes.Buffer
+		var total int
+		t0 := time.Now()
+		for i := 0; i < 5000000; i++ {
+			if i&0xfffff == 0 {
+				t1 := time.Since(t0)
+				log.Printf("%d bytes in %v (%s bytes/sec)", total, time.Since(t0), humanize.Bytes(uint64(float64(total)/float64(t1.Seconds()))))
+				t0 = time.Now()
+				total = 0
+			}
+			buf.Reset()
+			g.generate(&buf, *maxDepth)
+			total += buf.Len()
+		}
+		return
+	}
+
+	buf := bufio.NewWriter(os.Stdout)
+	g.generate(buf, *maxDepth)
+
 }
 
 // have we visited this variable already during typecheck
