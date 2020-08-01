@@ -8,24 +8,20 @@ import (
 var xrand = xorm(1)
 
 type generator interface {
-	generate(w io.Writer, depth int)
+	generate(w io.StringWriter, depth int)
 }
 
 type terminal string
 
-func (t terminal) generate(w io.Writer, depth int) {
-	if sw, ok := w.(io.StringWriter); ok {
-		sw.WriteString(string(t))
-		return
-	}
-	w.Write([]byte(t))
+func (t terminal) generate(w io.StringWriter, depth int) {
+	w.WriteString(string(t))
 }
 
 type variable struct {
 	v string
 }
 
-func (v variable) generate(w io.Writer, depth int) {
+func (v variable) generate(w io.StringWriter, depth int) {
 	if depth <= 0 {
 		cheapestOption[v.v].generate(w, 0)
 		return
@@ -39,7 +35,7 @@ type choice struct {
 	cheap generator
 }
 
-func (c *choice) generate(w io.Writer, depth int) {
+func (c *choice) generate(w io.StringWriter, depth int) {
 	if depth <= 0 {
 		c.cheap.generate(w, depth-1)
 		return
@@ -56,7 +52,7 @@ type sequence struct {
 	s []generator
 }
 
-func (s *sequence) generate(w io.Writer, depth int) {
+func (s *sequence) generate(w io.StringWriter, depth int) {
 	for _, ss := range s.s {
 		ss.generate(w, depth-1)
 	}
@@ -70,23 +66,23 @@ type intrange struct {
 	low, high int
 }
 
-func (ir intrange) generate(w io.Writer, depth int) {
+func (ir intrange) generate(w io.StringWriter, depth int) {
 	n := xrand.Intn(ir.high - ir.low)
-	w.Write(strconv.AppendInt(nil, int64(ir.low+int(n)), 10))
+	w.WriteString(strconv.FormatInt(int64(ir.low+int(n)), 10))
 }
 
 type chrange struct {
 	low, high int
 }
 
-func (ch chrange) generate(w io.Writer, depth int) {
+func (ch chrange) generate(w io.StringWriter, depth int) {
 	n := xrand.Intn(ch.high - ch.low)
-	w.Write([]byte{byte(int(n) + ch.low)})
+	w.WriteString(string(rune(int(n) + ch.low)))
 }
 
 type epsilon struct{}
 
-func (e epsilon) generate(w io.Writer, depth int) {}
+func (e epsilon) generate(w io.StringWriter, depth int) {}
 
 type xorm uint64
 
