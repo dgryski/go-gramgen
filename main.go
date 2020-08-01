@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
-	"math/rand"
 	"os"
 	"runtime/pprof"
 	"time"
@@ -26,6 +25,7 @@ func main() {
 	input := flag.String("f", "", "input file")
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	benchmark := flag.Bool("bench", false, "run benchmark")
+	seed := flag.Uint64("seed", 0, "xorm random seed")
 	flag.Parse()
 
 	if *cpuprofile != "" {
@@ -114,7 +114,10 @@ func main() {
 	// TODO(dgryski): update syntax to match cup?
 	// TODO(dgryski): support "\"" and "\n" in lexer
 
-	rand.Seed(time.Now().UnixNano())
+	if *seed == 0 {
+		*seed = uint64(time.Now().UnixNano())
+	}
+	xrand = xorm(*seed)
 
 	if *benchmark {
 		var buf bytes.Buffer
