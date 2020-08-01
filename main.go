@@ -5,6 +5,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,7 +16,21 @@ import (
 
 func main() {
 
-	data, _ := ioutil.ReadAll(os.Stdin)
+	input := flag.String("f", "", "input file")
+	flag.Parse()
+
+	var data []byte
+	var err error
+	if *input != "" {
+		data, err = ioutil.ReadFile(*input)
+	} else {
+		data, err = ioutil.ReadAll(os.Stdin)
+	}
+
+	if err != nil {
+		log.Fatalf("error reading grammar: %v", err)
+	}
+
 	l := lex(data)
 
 	if yyParse(l) != 0 {
