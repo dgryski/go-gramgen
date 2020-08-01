@@ -68,10 +68,6 @@ func main() {
 	// TODO(dgryski): add variables to rules
 	// TODO(dgryski): what else to pick from dharma syntax?
 	// TODO(dgryski): common library of useful items
-	// TODO(dgryski): add optimization pass to remove extra nonterminal -> terminal steps
-	// TODO(dgryski): add maxdepth param
-	// TODO(dgryski): add "cheapest non-terminal" table for when max depth is exceeded
-	// TODO(dgryski): add better error messages for parsing ruleset
 	// TODO(dgryski): update syntax to match cup?
 	// TODO(dgryski): support "\"" and "\n" in lexer
 
