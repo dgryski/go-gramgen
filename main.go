@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"time"
@@ -16,6 +17,7 @@ import (
 
 func main() {
 
+	maxDepth := flag.Int("m", 8, "max recursion depth")
 	input := flag.String("f", "", "input file")
 	flag.Parse()
 
@@ -43,10 +45,13 @@ func main() {
 		log.Fatal("unable to find START")
 	}
 
-	err := typecheck(symtab, g)
-	if err != nil {
+	if err := typecheck(symtab, g); err != nil {
 		log.Fatal(err)
 	}
+
+	g = symtab["START"]
+
+	cheapest(symtab, g)
 
 	// TODO(dgryski): add range, repeat
 	// TODO(dgryski): add variables to rules
@@ -61,10 +66,10 @@ func main() {
 
 	rand.Seed(time.Now().UnixNano())
 
-	g.generate(os.Stdout)
+	g.generate(os.Stdout, *maxDepth)
 }
 
-// have we recursed on this variable already
+// have we visited this variable already during typecheck
 var typeCache = make(map[string]error)
 
 func typecheck(symtab map[string]generator, sym generator) error {
@@ -77,34 +82,33 @@ func typecheck(symtab map[string]generator, sym generator) error {
 	case chrange:
 	case epsilon:
 
-	case choice:
-		for _, i := range s {
+	case *choice:
+		for _, i := range s.c {
 			if err := typecheck(symtab, i); err != nil {
 				return err
 			}
 		}
 
-	case sequence:
-		for _, i := range s {
+	case *sequence:
+		for _, i := range s.s {
 			if err := typecheck(symtab, i); err != nil {
 				return err
 			}
 		}
 
-	case variable:
-		if err, ok := typeCache[string(s)]; ok {
+	case *variable:
+		if err, ok := typeCache[s.v]; ok {
 			// already recursed here
 			return err
 		}
-
-		s2, ok := symtab[string(s)]
+		s2, ok := symtab[s.v]
 		if !ok {
-			return fmt.Errorf("unknown symbol: %v", s)
+			return fmt.Errorf("unknown symbol: %v", s.v)
 		}
 
-		typeCache[string(s)] = nil
+		typeCache[s.v] = nil
 		err := typecheck(symtab, s2)
-		typeCache[string(s)] = err
+		typeCache[s.v] = err
 		return err
 
 	default:
@@ -112,4 +116,56 @@ func typecheck(symtab map[string]generator, sym generator) error {
 	}
 
 	return nil
+}
+
+//  cache variable -> cheapest generator lookups
+var seen = make(map[string]bool)
+var cheapestOption = make(map[string]generator)
+
+func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
+	// typecheck the tree rooted at sym
+	// look for undefined symbols in the rules
+
+	switch s := sym.(type) {
+	case terminal:
+	case intrange:
+	case chrange:
+	case epsilon:
+
+	case *choice:
+		g, d := cheapest(symtab, s.c[0])
+		for _, c := range s.c[1:] {
+			if _, dd := cheapest(symtab, c); dd < d {
+				g, d = c, dd
+			}
+		}
+		s.cheap = g
+		return g, d
+
+	case *sequence:
+		_, d := cheapest(symtab, s.s[0])
+		for _, c := range s.s[1:] {
+			if _, dd := cheapest(symtab, c); dd > d {
+				d = dd
+			}
+		}
+		return s, d + 1
+
+	case *variable:
+		if _, ok := seen[s.v]; ok {
+			return sym, math.MaxUint32
+		}
+
+		ss := symtab[s.v]
+		seen[s.v] = true
+		g, d := cheapest(symtab, ss)
+		delete(seen, s.v)
+		cheapestOption[s.v] = g
+		return g, d + 1
+
+	default:
+		panic("unknown generator type")
+	}
+
+	return sym, 0
 }

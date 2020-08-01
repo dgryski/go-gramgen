@@ -13,8 +13,8 @@ var symtab = map[string]generator{"EMPTY":epsilon{}}
     s string
     g generator
 
-    seqs sequence
-    choices choice
+    seqs *sequence
+    choices *choice
 }
 
 %token <s> tID tQSTRING
@@ -39,18 +39,18 @@ rule : tID tASSIGN expr_list ';' {
     if _, ok := symtab[$1]; ok {
         log.Fatalf("duplicate symbol %q", $1)
     }
-    symtab[$1] = choice($3)
+    symtab[$1] = $3
     $$ = $1
 }
 
-expr_list : expr_list '|' expr_seq { $$ = append([]generator($1), $3) }
-    | expr_seq { $$ = choice([]generator{$1}) }
+expr_list : expr_list '|' expr_seq { $1.add($3); $$ = $1; }
+    | expr_seq { $$ = &choice{c:[]generator{$1}} }
     ;
 
-expr_seq : expr_seq expr { $$ = append([]generator($1), $2) }
-    | expr { $$ = sequence([]generator{$1}) }
+expr_seq : expr_seq expr { $1.add($2); $$ = $1; }
+    | expr { $$ = &sequence{s:[]generator{$1}} }
     ;
 
 expr: tQSTRING {  $$ = terminal($1) }
-    | tID { $$ = variable($1) }
+    | tID { $$ = &variable{v:$1} }
     ;
