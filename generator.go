@@ -18,15 +18,16 @@ func (t terminal) generate(w io.StringWriter, depth int) {
 }
 
 type variable struct {
-	v string
+	v   string
+	idx int
 }
 
 func (v variable) generate(w io.StringWriter, depth int) {
 	if depth <= 0 {
-		cheapestOption[v.v].generate(w, 0)
+		cheapestOption[v.idx].generate(w, 0)
 		return
 	}
-	g := symtab[v.v]
+	g := symtabIdx[v.idx]
 	g.generate(w, depth-1)
 }
 

@@ -98,6 +98,7 @@ func main() {
 
 	g = symtab["START"]
 	seen = make(map[string]bool)
+	cheapestOption = make([]generator, len(symtab))
 	cheapest(symtab, g)
 
 	// TODO(dgryski): add range, repeat
@@ -106,7 +107,6 @@ func main() {
 	// TODO(dgryski): common library of useful items
 	// TODO(dgryski): update syntax to match cup?
 	// TODO(dgryski): support "\"" and "\n" in lexer
-	// TODO(dgryski): replace symtab map with array during generation for variables
 
 	rand.Seed(time.Now().UnixNano())
 
@@ -184,7 +184,7 @@ func typecheck(symtab map[string]generator, sym generator) error {
 
 //  cache variable -> cheapest generator lookups
 var seen map[string]bool
-var cheapestOption = make(map[string]generator)
+var cheapestOption []generator
 
 func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 	// typecheck the tree rooted at sym
@@ -224,7 +224,7 @@ func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 		seen[s.v] = true
 		g, d := cheapest(symtab, ss)
 		delete(seen, s.v)
-		cheapestOption[s.v] = g
+		cheapestOption[s.idx] = g
 		return g, d + 1
 
 	default:
@@ -233,6 +233,9 @@ func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 
 	return sym, 0
 }
+
+var symtabToIdx = make(map[string]int)
+var symtabIdx []generator
 
 func optimize(sym generator) (generator, bool) {
 	// typecheck the tree rooted at sym
@@ -260,6 +263,14 @@ func optimize(sym generator) (generator, bool) {
 			return r, true
 		}
 
+		if idx, ok := symtabToIdx[s.v]; ok {
+			s.idx = idx
+			return sym, false
+		}
+
+		s.idx = len(symtabIdx)
+		symtabToIdx[s.v] = s.idx
+		symtabIdx = append(symtabIdx, ss)
 		return sym, false
 
 	case *choice:
