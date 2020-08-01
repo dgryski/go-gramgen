@@ -64,6 +64,12 @@ func main() {
 		log.Fatal("unable to find START")
 	}
 
+	for k := range symtab {
+		idx := len(symtabToIdx)
+		symtabToIdx[k] = idx
+	}
+	symtabIdx = make([]generator, len(symtabToIdx))
+
 	if err := typecheck(symtab, g); err != nil {
 		log.Fatal(err)
 	}
@@ -98,7 +104,7 @@ func main() {
 
 	g = symtab["START"]
 	seen = make(map[string]bool)
-	cheapestOption = make([]generator, len(symtab))
+	cheapestOption = make([]generator, len(symtabIdx))
 	cheapest(symtab, g)
 
 	// TODO(dgryski): add range, repeat
@@ -263,14 +269,14 @@ func optimize(sym generator) (generator, bool) {
 			return r, true
 		}
 
-		if idx, ok := symtabToIdx[s.v]; ok {
-			s.idx = idx
-			return sym, false
+		idx, ok := symtabToIdx[s.v]
+		if !ok {
+			panic("unknown symbol")
 		}
-
-		s.idx = len(symtabIdx)
-		symtabToIdx[s.v] = s.idx
-		symtabIdx = append(symtabIdx, ss)
+		s.idx = idx
+		if symtabIdx[idx] == nil {
+			symtabIdx[idx] = ss
+		}
 		return sym, false
 
 	case *choice:
