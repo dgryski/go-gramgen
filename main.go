@@ -49,6 +49,9 @@ func main() {
 	g.generate(os.Stdout)
 }
 
+// have we recursed on this variable already
+var typeCache = make(map[string]error)
+
 func typecheck(symtab map[string]generator, sym generator) error {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
@@ -74,12 +77,20 @@ func typecheck(symtab map[string]generator, sym generator) error {
 		}
 
 	case variable:
+		if err, ok := typeCache[string(s)]; ok {
+			// already recursed here
+			return err
+		}
+
 		s2, ok := symtab[string(s)]
 		if !ok {
 			return fmt.Errorf("unknown symbol: %v", s)
 		}
 
-		return typecheck(symtab, s2)
+		typeCache[string(s)] = nil
+		err := typecheck(symtab, s2)
+		typeCache[string(s)] = err
+		return err
 
 	default:
 		panic("unknown generator type")
