@@ -14,6 +14,10 @@ type generator interface {
 type terminal string
 
 func (t terminal) generate(w io.Writer, depth int) {
+	if sw, ok := w.(io.StringWriter); ok {
+		sw.WriteString(string(t))
+		return
+	}
 	w.Write([]byte(t))
 }
 
