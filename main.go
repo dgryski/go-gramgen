@@ -204,7 +204,8 @@ func optimize(sym generator) (generator, bool) {
 
 	case *choice:
 		if len(s.c) == 1 {
-			return optimize(s.c[0])
+			g, _ := optimize(s.c[0])
+			return g, true
 		}
 
 		var changed bool
@@ -217,7 +218,8 @@ func optimize(sym generator) (generator, bool) {
 
 	case *sequence:
 		if len(s.s) == 1 {
-			return optimize(s.s[0])
+			g, _ := optimize(s.s[0])
+			return g, true
 		}
 
 		var changed bool
