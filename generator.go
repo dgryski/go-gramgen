@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"log"
 	"math/rand"
 	"strconv"
 )
@@ -30,10 +29,7 @@ func (v variable) generate(w io.Writer, depth int) {
 		cheapestOption[v.v].generate(w, 0)
 		return
 	}
-	g, ok := symtab[v.v]
-	if !ok {
-		log.Fatalf("unknown variable %q", v.v)
-	}
+	g := symtab[v.v]
 	g.generate(w, depth-1)
 }
 
