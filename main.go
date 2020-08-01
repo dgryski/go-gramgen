@@ -200,7 +200,24 @@ func optimize(sym generator) (generator, bool) {
 	case intrange:
 	case chrange:
 	case epsilon:
+
 	case *variable:
+		ss := symtab[s.v]
+
+		switch r := ss.(type) {
+		case terminal:
+			return r, true
+		case intrange:
+			return r, true
+		case chrange:
+			return r, true
+		case epsilon:
+			return r, true
+		case *variable:
+			return r, true
+		}
+
+		return sym, false
 
 	case *choice:
 		if len(s.c) == 1 {
