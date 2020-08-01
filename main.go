@@ -49,8 +49,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	g = symtab["START"]
+	changed := true
+	for changed {
+		changed = false
+		for k, v := range symtab {
+			var b bool
+			symtab[k], b = optimize(v)
+			if b {
+				changed = true
+			}
+		}
+	}
 
+	g = symtab["START"]
 	cheapest(symtab, g)
 
 	// TODO(dgryski): add range, repeat
@@ -168,4 +179,48 @@ func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 	}
 
 	return sym, 0
+}
+
+func optimize(sym generator) (generator, bool) {
+	// typecheck the tree rooted at sym
+	// look for undefined symbols in the rules
+
+	switch s := sym.(type) {
+	case terminal:
+	case intrange:
+	case chrange:
+	case epsilon:
+	case *variable:
+
+	case *choice:
+		if len(s.c) == 1 {
+			return optimize(s.c[0])
+		}
+
+		var changed bool
+		for i, c := range s.c {
+			var b bool
+			s.c[i], b = optimize(c)
+			changed = changed || b
+		}
+		return sym, changed
+
+	case *sequence:
+		if len(s.s) == 1 {
+			return optimize(s.s[0])
+		}
+
+		var changed bool
+		for i, c := range s.s {
+			var b bool
+			s.s[i], b = optimize(c)
+			changed = changed || b
+		}
+		return sym, changed
+
+	default:
+		panic("unknown generator type")
+	}
+
+	return sym, false
 }
