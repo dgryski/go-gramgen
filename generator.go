@@ -2,9 +2,10 @@ package main
 
 import (
 	"io"
-	"math/rand"
 	"strconv"
 )
+
+var xrand = xorm(1)
 
 type generator interface {
 	generate(w io.Writer, depth int)
@@ -38,12 +39,12 @@ type choice struct {
 	cheap generator
 }
 
-func (c choice) generate(w io.Writer, depth int) {
+func (c *choice) generate(w io.Writer, depth int) {
 	if depth <= 0 {
 		c.cheap.generate(w, depth-1)
 		return
 	}
-	n := rand.Intn(len(c.c))
+	n := xrand.Intn(len(c.c))
 	c.c[n].generate(w, depth-1)
 }
 
@@ -55,7 +56,7 @@ type sequence struct {
 	s []generator
 }
 
-func (s sequence) generate(w io.Writer, depth int) {
+func (s *sequence) generate(w io.Writer, depth int) {
 	for _, ss := range s.s {
 		ss.generate(w, depth-1)
 	}
@@ -70,8 +71,8 @@ type intrange struct {
 }
 
 func (ir intrange) generate(w io.Writer, depth int) {
-	n := rand.Intn(ir.high - ir.low)
-	w.Write(strconv.AppendInt(nil, int64(ir.low+n), 10))
+	n := xrand.Intn(ir.high - ir.low)
+	w.Write(strconv.AppendInt(nil, int64(ir.low+int(n)), 10))
 }
 
 type chrange struct {
@@ -79,10 +80,32 @@ type chrange struct {
 }
 
 func (ch chrange) generate(w io.Writer, depth int) {
-	n := rand.Intn(ch.high - ch.low)
-	w.Write([]byte{byte(n + ch.low)})
+	n := xrand.Intn(ch.high - ch.low)
+	w.Write([]byte{byte(int(n) + ch.low)})
 }
 
 type epsilon struct{}
 
 func (e epsilon) generate(w io.Writer, depth int) {}
+
+type xorm uint64
+
+func (r *xorm) Next() uint64 {
+	x := *r
+	x ^= x >> 12 // a
+	x ^= x << 25 // b
+	x ^= x >> 27 // c
+	*r = x * 2685821657736338717
+	return uint64(*r)
+}
+
+func (r *xorm) Intn(n int) uint64 {
+	bound := uint64(n)
+	threshold := -bound % bound
+	for {
+		n := r.Next()
+		if n >= threshold {
+			return n % bound
+		}
+	}
+}
