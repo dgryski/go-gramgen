@@ -75,7 +75,24 @@ func main() {
 		}
 	}
 
+	seen = make(map[string]bool)
+	seen["START"] = true
 	g = symtab["START"]
+	unused(symtab, g)
+
+	var remove []string
+	for k := range symtab {
+		if !seen[k] {
+			remove = append(remove, k)
+		}
+	}
+
+	for _, k := range remove {
+		delete(symtab, k)
+	}
+
+	g = symtab["START"]
+	seen = make(map[string]bool)
 	cheapest(symtab, g)
 
 	// TODO(dgryski): add range, repeat
@@ -140,7 +157,7 @@ func typecheck(symtab map[string]generator, sym generator) error {
 }
 
 //  cache variable -> cheapest generator lookups
-var seen = make(map[string]bool)
+var seen map[string]bool
 var cheapestOption = make(map[string]generator)
 
 func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
@@ -252,4 +269,39 @@ func optimize(sym generator) (generator, bool) {
 	}
 
 	return sym, false
+}
+
+func unused(symtab map[string]generator, sym generator) {
+	// typecheck the tree rooted at sym
+	// look for undefined symbols in the rules
+
+	switch s := sym.(type) {
+	case terminal:
+	case intrange:
+	case chrange:
+	case epsilon:
+
+	case *choice:
+		for _, i := range s.c {
+			unused(symtab, i)
+		}
+
+	case *sequence:
+		for _, i := range s.s {
+			unused(symtab, i)
+		}
+
+	case *variable:
+		if seen[s.v] {
+			return
+		}
+
+		seen[s.v] = true
+
+		s2 := symtab[s.v]
+		unused(symtab, s2)
+
+	default:
+		panic("unknown generator type")
+	}
 }
