@@ -106,6 +106,7 @@ func main() {
 	// TODO(dgryski): common library of useful items
 	// TODO(dgryski): update syntax to match cup?
 	// TODO(dgryski): support "\"" and "\n" in lexer
+	// TODO(dgryski): replace symtab map with array during generation for variables
 
 	rand.Seed(time.Now().UnixNano())
 
