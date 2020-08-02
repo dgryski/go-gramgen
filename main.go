@@ -87,6 +87,13 @@ func main() {
 		}
 	}
 
+	for k, v := range vars {
+		idx := symtabToIdx[k]
+		v.idx = idx
+		ss := symtab[v.v]
+		symtabIdx[idx] = ss
+	}
+
 	seen = make(map[string]bool)
 	seen["START"] = true
 	g = symtab["START"]
@@ -290,14 +297,6 @@ func optimize(sym generator) (generator, bool) {
 			return r, true
 		}
 
-		idx, ok := symtabToIdx[s.v]
-		if !ok {
-			panic("unknown symbol")
-		}
-		s.idx = idx
-		if symtabIdx[idx] == nil {
-			symtabIdx[idx] = ss
-		}
 		return sym, false
 
 	case *choice:
