@@ -121,7 +121,6 @@ func main() {
 
 	g = symtab["START"]
 	seen = make(map[string]bool)
-	cheapestOption = make([]generator, len(symtabIdx))
 	cheapest(symtab, seen, g)
 
 	if *dump {
@@ -215,9 +214,6 @@ func typecheck(symtab map[string]generator, seen map[string]bool, sym generator)
 	return nil
 }
 
-//  cache variable -> cheapest generator lookups
-var cheapestOption []generator
-
 func cheapest(symtab map[string]generator, seen map[string]bool, sym generator) (g generator, d int) {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
@@ -255,7 +251,7 @@ func cheapest(symtab map[string]generator, seen map[string]bool, sym generator) 
 		ss := symtab[s.v]
 		seen[s.v] = true
 		g, d := cheapest(symtab, seen, ss)
-		cheapestOption[s.idx] = g
+		s.cheap = g
 		return g, d + 1
 
 	default:
