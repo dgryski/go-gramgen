@@ -326,6 +326,53 @@ func optimize(sym generator) (generator, bool) {
 			s.s[i], b = optimize(c)
 			changed = changed || b
 		}
+
+		for i := 0; i < len(s.s)-1; i++ {
+			t1, ok := s.s[i].(terminal)
+			if !ok {
+				continue
+			}
+
+			t2, ok := s.s[i+1].(terminal)
+			if !ok {
+				continue
+			}
+
+			s.s[i] = terminal(string(t1) + string(t2))
+			s.s[i+1] = epsilon{}
+			changed = true
+		}
+
+		for i := 0; i < len(s.s); i++ {
+			v, ok := s.s[i].(*variable)
+			if !ok {
+				continue
+			}
+
+			ss := symtabIdx[v.idx]
+			sseq, ok := ss.(*sequence)
+			if !ok {
+				continue
+			}
+
+			seq := make([]generator, 0, len(s.s)+len(sseq.s))
+			seq = append(seq, s.s[:i]...)
+			seq = append(seq, sseq.s...)
+			seq = append(seq, s.s[i+1:]...)
+			s.s = seq
+			changed = true
+		}
+
+		for i := 0; i < len(s.s); i++ {
+			if _, ok := s.s[i].(epsilon); !ok {
+				continue
+			}
+
+			s.s = append(s.s[:i], s.s[i+1:]...)
+
+			changed = true
+		}
+
 		return sym, changed
 
 	default:
