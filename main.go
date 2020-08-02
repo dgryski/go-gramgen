@@ -115,9 +115,7 @@ func main() {
 	// TODO(dgryski): common library of useful items
 	// TODO(dgryski): update syntax to match cup?
 	// TODO(dgryski): support "\"" and "\n" in lexer
-	// TODO(dgryski): support outputting parsed grammar
-	// TODO(dgryski): optimize (seq "foo" "bar") -> (terminal "foobar")
-	// TODO(dgryski): optimize (seq "foo" (var baz)) -> (seq "foo" "b" "a" "z")
+	// TODO(dgryski): ./go-gramgen  -f json.in -seed=7 segvs; map ordering
 
 	if *dump {
 		var keys []string
