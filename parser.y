@@ -6,6 +6,7 @@ import (
 )
 
 var symtab = map[string]generator{"EMPTY":epsilon{}}
+var vars = make(map[string]*variable)
 
 %}
 
@@ -52,5 +53,13 @@ expr_seq : expr_seq expr { $1.add($2); $$ = $1; }
     ;
 
 expr: tQSTRING {  $$ = terminal($1) }
-    | tID { $$ = &variable{v:$1} }
+    | tID {
+        v, ok := vars[$1];
+        if !ok {
+            v = &variable{v:$1}
+            vars[$1] = v
+        }
+         $$ = v
+          }
     ;
+

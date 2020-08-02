@@ -12,8 +12,9 @@ import (
 )
 
 var symtab = map[string]generator{"EMPTY": epsilon{}}
+var vars = make(map[string]*variable)
 
-//line parser.y:12
+//line parser.y:13
 type yySymType struct {
 	yys int
 	s   string
@@ -454,7 +455,7 @@ yydefault:
 
 	case 4:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.y:38
+//line parser.y:39
 		{
 			if _, ok := symtab[yyDollar[1].s]; ok {
 				log.Fatalf("duplicate symbol %q", yyDollar[1].s)
@@ -464,41 +465,46 @@ yydefault:
 		}
 	case 5:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.y:46
+//line parser.y:47
 		{
 			yyDollar[1].choices.add(yyDollar[3].seqs)
 			yyVAL.choices = yyDollar[1].choices
 		}
 	case 6:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:47
+//line parser.y:48
 		{
 			yyVAL.choices = &choice{c: []generator{yyDollar[1].seqs}}
 		}
 	case 7:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.y:50
+//line parser.y:51
 		{
 			yyDollar[1].seqs.add(yyDollar[2].g)
 			yyVAL.seqs = yyDollar[1].seqs
 		}
 	case 8:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:51
+//line parser.y:52
 		{
 			yyVAL.seqs = &sequence{s: []generator{yyDollar[1].g}}
 		}
 	case 9:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:54
+//line parser.y:55
 		{
 			yyVAL.g = terminal(yyDollar[1].s)
 		}
 	case 10:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:55
+//line parser.y:56
 		{
-			yyVAL.g = &variable{v: yyDollar[1].s}
+			v, ok := vars[yyDollar[1].s]
+			if !ok {
+				v = &variable{v: yyDollar[1].s}
+				vars[yyDollar[1].s] = v
+			}
+			yyVAL.g = v
 		}
 	}
 	goto yystack /* stack new state and value */
