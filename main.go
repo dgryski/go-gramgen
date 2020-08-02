@@ -157,7 +157,7 @@ func main() {
 
 	buf := bufio.NewWriter(os.Stdout)
 	g.generate(buf, *maxDepth)
-
+	buf.Flush()
 }
 
 // have we visited this variable already during typecheck
