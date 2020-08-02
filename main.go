@@ -14,6 +14,7 @@ import (
 	"math"
 	"os"
 	"runtime/pprof"
+	"sort"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -26,6 +27,7 @@ func main() {
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	benchmark := flag.Bool("bench", false, "run benchmark")
 	seed := flag.Uint64("seed", 0, "xorm random seed")
+	dump := flag.Bool("dump", false, "dump parse tree")
 	flag.Parse()
 
 	if *cpuprofile != "" {
@@ -116,6 +118,19 @@ func main() {
 	// TODO(dgryski): support outputting parsed grammar
 	// TODO(dgryski): optimize (seq "foo" "bar") -> (terminal "foobar")
 	// TODO(dgryski): optimize (seq "foo" (var baz)) -> (seq "foo" "b" "a" "z")
+
+	if *dump {
+		var keys []string
+		for k := range symtab {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			fmt.Printf("%v := %v\n", k, symtab[k].String())
+		}
+		return
+	}
 
 	if *seed == 0 {
 		*seed = uint64(time.Now().UnixNano())

@@ -1,20 +1,27 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"strconv"
+	"strings"
 )
 
 var xrand = xorm(1)
 
 type generator interface {
 	generate(w io.StringWriter, depth int)
+	String() string
 }
 
 type terminal string
 
 func (t terminal) generate(w io.StringWriter, depth int) {
 	w.WriteString(string(t))
+}
+
+func (t terminal) String() string {
+	return fmt.Sprintf("(terminal %q)", string(t))
 }
 
 type variable struct {
@@ -29,6 +36,10 @@ func (v variable) generate(w io.StringWriter, depth int) {
 	}
 	g := symtabIdx[v.idx]
 	g.generate(w, depth-1)
+}
+
+func (v variable) String() string {
+	return fmt.Sprintf("(var %q)", v.v)
 }
 
 type choice struct {
@@ -49,6 +60,19 @@ func (c *choice) add(g generator) {
 	c.c = append(c.c, g)
 }
 
+func (c *choice) String() string {
+	var sb strings.Builder
+
+	sb.WriteString("(choice\n")
+	for _, ss := range c.c {
+		sb.WriteString("\t")
+		sb.WriteString(ss.String())
+		sb.WriteString("\n")
+	}
+	sb.WriteString(")")
+	return sb.String()
+}
+
 type sequence struct {
 	s []generator
 }
@@ -63,6 +87,18 @@ func (s *sequence) add(g generator) {
 	s.s = append(s.s, g)
 }
 
+func (s *sequence) String() string {
+	var sb strings.Builder
+
+	sb.WriteString("(seq ")
+	for _, ss := range s.s {
+		sb.WriteString(ss.String())
+		sb.WriteString(" ")
+	}
+	sb.WriteString(")")
+	return sb.String()
+}
+
 type intrange struct {
 	low, high int
 }
@@ -71,6 +107,8 @@ func (ir intrange) generate(w io.StringWriter, depth int) {
 	n := xrand.Intn(ir.high - ir.low)
 	w.WriteString(strconv.FormatInt(int64(ir.low+int(n)), 10))
 }
+
+func (ir intrange) String() string { return fmt.Sprintf("(intr %d %d)", ir.low, ir.high) }
 
 type chrange struct {
 	low, high int
@@ -81,9 +119,12 @@ func (ch chrange) generate(w io.StringWriter, depth int) {
 	w.WriteString(string(rune(int(n) + ch.low)))
 }
 
+func (ch chrange) String() string { return fmt.Sprintf("(chr %q %q)", rune(ch.low), rune(ch.high)) }
+
 type epsilon struct{}
 
 func (e epsilon) generate(w io.StringWriter, depth int) {}
+func (e epsilon) String() string                        { return "(epsilon)" }
 
 type xorm uint64
 
