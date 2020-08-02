@@ -102,10 +102,10 @@ func main() {
 		symtabIdx[idx] = ss
 	}
 
-	seen = make(map[string]bool)
+	seen := make(map[string]bool)
 	seen["START"] = true
 	g = symtab["START"]
-	unused(symtab, g)
+	unused(symtab, seen, g)
 
 	var remove []string
 	for k := range symtab {
@@ -121,7 +121,7 @@ func main() {
 	g = symtab["START"]
 	seen = make(map[string]bool)
 	cheapestOption = make([]generator, len(symtabIdx))
-	cheapest(symtab, g)
+	cheapest(symtab, seen, g)
 
 	if *dump {
 		var keys []string
@@ -218,10 +218,9 @@ func typecheck(symtab map[string]generator, sym generator) error {
 }
 
 //  cache variable -> cheapest generator lookups
-var seen map[string]bool
 var cheapestOption []generator
 
-func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
+func cheapest(symtab map[string]generator, seen map[string]bool, sym generator) (g generator, d int) {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
 
@@ -232,9 +231,9 @@ func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 	case epsilon:
 
 	case *choice:
-		g, d := cheapest(symtab, s.c[0])
+		g, d := cheapest(symtab, seen, s.c[0])
 		for _, c := range s.c[1:] {
-			if _, dd := cheapest(symtab, c); dd < d {
+			if _, dd := cheapest(symtab, seen, c); dd < d {
 				g, d = c, dd
 			}
 		}
@@ -242,9 +241,9 @@ func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 		return g, d
 
 	case *sequence:
-		_, d := cheapest(symtab, s.s[0])
+		_, d := cheapest(symtab, seen, s.s[0])
 		for _, c := range s.s[1:] {
-			if _, dd := cheapest(symtab, c); dd > d {
+			if _, dd := cheapest(symtab, seen, c); dd > d {
 				d = dd
 			}
 		}
@@ -257,7 +256,7 @@ func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 
 		ss := symtab[s.v]
 		seen[s.v] = true
-		g, d := cheapest(symtab, ss)
+		g, d := cheapest(symtab, seen, ss)
 		cheapestOption[s.idx] = g
 		return g, d + 1
 
@@ -381,7 +380,7 @@ func optimize(sym generator) (generator, bool) {
 	return sym, false
 }
 
-func unused(symtab map[string]generator, sym generator) {
+func unused(symtab map[string]generator, seen map[string]bool, sym generator) {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
 
@@ -393,12 +392,12 @@ func unused(symtab map[string]generator, sym generator) {
 
 	case *choice:
 		for _, i := range s.c {
-			unused(symtab, i)
+			unused(symtab, seen, i)
 		}
 
 	case *sequence:
 		for _, i := range s.s {
-			unused(symtab, i)
+			unused(symtab, seen, i)
 		}
 
 	case *variable:
@@ -409,7 +408,7 @@ func unused(symtab map[string]generator, sym generator) {
 		seen[s.v] = true
 
 		s2 := symtab[s.v]
-		unused(symtab, s2)
+		unused(symtab, seen, s2)
 
 	default:
 		panic("unknown generator type")
