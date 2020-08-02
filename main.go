@@ -4,6 +4,15 @@
 
 package main
 
+// TODO(dgryski): add range, repeat
+// TODO(dgryski): add variables to rules
+// TODO(dgryski): what else to pick from dharma syntax?
+// TODO(dgryski): common library of useful items
+// TODO(dgryski): update syntax to match cup?
+// TODO(dgryski): support "\"" and "\n" in lexer
+// TODO(dgryski): refactor to unit tests
+// TODO(dgryski): remove globals
+
 import (
 	"bufio"
 	"bytes"
@@ -114,15 +123,6 @@ func main() {
 	seen = make(map[string]bool)
 	cheapestOption = make([]generator, len(symtabIdx))
 	cheapest(symtab, g)
-
-	// TODO(dgryski): add range, repeat
-	// TODO(dgryski): add variables to rules
-	// TODO(dgryski): what else to pick from dharma syntax?
-	// TODO(dgryski): common library of useful items
-	// TODO(dgryski): update syntax to match cup?
-	// TODO(dgryski): support "\"" and "\n" in lexer
-	// TODO(dgryski): refactor to unit tests
-	// TODO(dgryski): remove globals
 
 	if *dump {
 		var keys []string
