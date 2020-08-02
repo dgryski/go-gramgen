@@ -81,7 +81,8 @@ func main() {
 	}
 	symtabIdx = make([]generator, len(symtabToIdx))
 
-	if err := typecheck(symtab, g); err != nil {
+	seen := make(map[string]bool)
+	if err := typecheck(symtab, seen, g); err != nil {
 		log.Fatal(err)
 	}
 
@@ -102,7 +103,7 @@ func main() {
 		symtabIdx[idx] = ss
 	}
 
-	seen := make(map[string]bool)
+	seen = make(map[string]bool)
 	seen["START"] = true
 	g = symtab["START"]
 	unused(symtab, seen, g)
@@ -164,14 +165,12 @@ func main() {
 	for i := 0; i < *items; i++ {
 		buf.Reset(os.Stdout)
 		g.generate(buf, *maxDepth)
+		buf.WriteByte('\n')
 		buf.Flush()
 	}
 }
 
-// have we visited this variable already during typecheck
-var typeCache = make(map[string]error)
-
-func typecheck(symtab map[string]generator, sym generator) error {
+func typecheck(symtab map[string]generator, seen map[string]bool, sym generator) error {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
 
@@ -183,32 +182,31 @@ func typecheck(symtab map[string]generator, sym generator) error {
 
 	case *choice:
 		for _, i := range s.c {
-			if err := typecheck(symtab, i); err != nil {
+			if err := typecheck(symtab, seen, i); err != nil {
 				return err
 			}
 		}
 
 	case *sequence:
 		for _, i := range s.s {
-			if err := typecheck(symtab, i); err != nil {
+			if err := typecheck(symtab, seen, i); err != nil {
 				return err
 			}
 		}
 
 	case *variable:
-		if err, ok := typeCache[s.v]; ok {
-			// already recursed here
-			return err
+		if seen[s.v] {
+			return nil
 		}
+
+		seen[s.v] = true
+
 		s2, ok := symtab[s.v]
 		if !ok {
 			return fmt.Errorf("unknown symbol: %v", s.v)
 		}
 
-		typeCache[s.v] = nil
-		err := typecheck(symtab, s2)
-		typeCache[s.v] = err
-		return err
+		return typecheck(symtab, seen, s2)
 
 	default:
 		panic("unknown generator type")
