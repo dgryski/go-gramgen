@@ -257,7 +257,6 @@ func cheapest(symtab map[string]generator, sym generator) (g generator, d int) {
 		ss := symtab[s.v]
 		seen[s.v] = true
 		g, d := cheapest(symtab, ss)
-		delete(seen, s.v)
 		cheapestOption[s.idx] = g
 		return g, d + 1
 
