@@ -28,6 +28,7 @@ func main() {
 	benchmark := flag.Bool("bench", false, "run benchmark")
 	seed := flag.Uint64("seed", 0, "xorm random seed")
 	dump := flag.Bool("dump", false, "dump parse tree")
+	items := flag.Int("n", 1, "number of runs")
 	flag.Parse()
 
 	if *cpuprofile != "" {
@@ -152,8 +153,11 @@ func main() {
 	}
 
 	buf := bufio.NewWriter(os.Stdout)
-	g.generate(buf, *maxDepth)
-	buf.Flush()
+	for i := 0; i < *items; i++ {
+		buf.Reset(os.Stdout)
+		g.generate(buf, *maxDepth)
+		buf.Flush()
+	}
 }
 
 // have we visited this variable already during typecheck
