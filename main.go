@@ -148,7 +148,7 @@ func main() {
 		for i := 0; i < 5000000; i++ {
 			if i&0xfffff == 0 {
 				t1 := time.Since(t0)
-				log.Printf("%d bytes in %v (%v bytes/sec)", total, time.Since(t0), uint64(float64(total)/float64(t1.Seconds())))
+				log.Printf("%d bytes in %v (%.4f MB/sec)", total, time.Since(t0), (float64(total)/float64(t1.Seconds()))/(1024*1024))
 				t0 = time.Now()
 				total = 0
 			}
