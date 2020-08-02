@@ -82,9 +82,7 @@ func main() {
 		for k, v := range symtab {
 			var b bool
 			symtab[k], b = optimize(v)
-			if b {
-				changed = true
-			}
+			changed = changed || b
 		}
 	}
 
