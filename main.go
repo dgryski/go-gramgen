@@ -124,14 +124,15 @@ func main() {
 
 	if *dump {
 		var keys []string
-		for k := range symtab {
+		for k := range vars {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 
 		for _, k := range keys {
-			fmt.Printf("%v := %v\n", k, symtab[k].String())
+			fmt.Printf("%v := %v\n", k, symtabIdx[vars[k].idx])
 		}
+
 		return
 	}
 
