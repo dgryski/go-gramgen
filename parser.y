@@ -5,8 +5,7 @@ import (
     "log"
 )
 
-var symtab = map[string]generator{"EMPTY":epsilon{}}
-var vars = make(map[string]*variable)
+var symtab = newSymbolTable()
 
 %}
 
@@ -37,10 +36,10 @@ rule_list : rule_list rule
     ;
 
 rule : tID tASSIGN expr_list ';' {
-    if _, ok := symtab[$1]; ok {
+    if _, ok := symtab.rules[$1]; ok {
         log.Fatalf("duplicate symbol %q", $1)
     }
-    symtab[$1] = $3
+    symtab.rules[$1] = $3
     $$ = $1
 }
 
@@ -54,10 +53,10 @@ expr_seq : expr_seq expr { $1.add($2); $$ = $1; }
 
 expr: tQSTRING {  $$ = terminal($1) }
     | tID {
-        v, ok := vars[$1];
+        v, ok := symtab.vars[$1];
         if !ok {
             v = &variable{v:$1}
-            vars[$1] = v
+            symtab.vars[$1] = v
         }
          $$ = v
           }

@@ -70,12 +70,12 @@ func main() {
 		return
 	}
 
-	g, ok := symtab["START"]
+	g, ok := symtab.rules["START"]
 	if !ok {
 		log.Fatal("unable to find START")
 	}
 
-	for k := range symtab {
+	for k := range symtab.rules {
 		idx := len(symtabToIdx)
 		symtabToIdx[k] = idx
 	}
@@ -89,49 +89,49 @@ func main() {
 	changed := true
 	for changed {
 		changed = false
-		for k, v := range symtab {
+		for k, v := range symtab.rules {
 			var b bool
-			symtab[k], b = optimize(v)
+			symtab.rules[k], b = optimize(v)
 			changed = changed || b
 		}
 	}
 
-	for k, v := range vars {
+	for k, v := range symtab.vars {
 		idx := symtabToIdx[k]
 		v.idx = idx
-		ss := symtab[v.v]
+		ss := symtab.rules[v.v]
 		symtabIdx[idx] = ss
 	}
 
 	seen = make(map[string]bool)
 	seen["START"] = true
-	g = symtab["START"]
+	g = symtab.rules["START"]
 	unused(symtab, seen, g)
 
 	var remove []string
-	for k := range symtab {
+	for k := range symtab.rules {
 		if !seen[k] {
 			remove = append(remove, k)
 		}
 	}
 
 	for _, k := range remove {
-		delete(symtab, k)
+		delete(symtab.rules, k)
 	}
 
-	g = symtab["START"]
+	g = symtab.rules["START"]
 	seen = make(map[string]bool)
 	cheapest(symtab, seen, g)
 
 	if *dump {
 		var keys []string
-		for k := range vars {
+		for k := range symtab.vars {
 			keys = append(keys, k)
 		}
 		sort.Strings(keys)
 
 		for _, k := range keys {
-			fmt.Printf("%v := %v\n", k, symtabIdx[vars[k].idx])
+			fmt.Printf("%v := %v\n", k, symtabIdx[symtab.vars[k].idx])
 		}
 
 		return
@@ -169,7 +169,7 @@ func main() {
 	}
 }
 
-func typecheck(symtab map[string]generator, seen map[string]bool, sym generator) error {
+func typecheck(symtab *symbolTable, seen map[string]bool, sym generator) error {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
 
@@ -200,7 +200,7 @@ func typecheck(symtab map[string]generator, seen map[string]bool, sym generator)
 
 		seen[s.v] = true
 
-		s2, ok := symtab[s.v]
+		s2, ok := symtab.rules[s.v]
 		if !ok {
 			return fmt.Errorf("unknown symbol: %v", s.v)
 		}
@@ -214,7 +214,7 @@ func typecheck(symtab map[string]generator, seen map[string]bool, sym generator)
 	return nil
 }
 
-func cheapest(symtab map[string]generator, seen map[string]bool, sym generator) (g generator, d int) {
+func cheapest(symtab *symbolTable, seen map[string]bool, sym generator) (g generator, d int) {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
 
@@ -248,7 +248,7 @@ func cheapest(symtab map[string]generator, seen map[string]bool, sym generator) 
 			return sym, math.MaxUint32
 		}
 
-		ss := symtab[s.v]
+		ss := symtab.rules[s.v]
 		seen[s.v] = true
 		g, d := cheapest(symtab, seen, ss)
 		s.cheap = g
@@ -275,7 +275,7 @@ func optimize(sym generator) (generator, bool) {
 	case epsilon:
 
 	case *variable:
-		ss := symtab[s.v]
+		ss := symtab.rules[s.v]
 
 		switch r := ss.(type) {
 		case terminal:
@@ -374,7 +374,7 @@ func optimize(sym generator) (generator, bool) {
 	return sym, false
 }
 
-func unused(symtab map[string]generator, seen map[string]bool, sym generator) {
+func unused(symtab *symbolTable, seen map[string]bool, sym generator) {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
 
@@ -401,7 +401,7 @@ func unused(symtab map[string]generator, seen map[string]bool, sym generator) {
 
 		seen[s.v] = true
 
-		s2 := symtab[s.v]
+		s2 := symtab.rules[s.v]
 		unused(symtab, seen, s2)
 
 	default:

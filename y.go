@@ -11,10 +11,9 @@ import (
 	"log"
 )
 
-var symtab = map[string]generator{"EMPTY": epsilon{}}
-var vars = make(map[string]*variable)
+var symtab = newSymbolTable()
 
-//line parser.y:13
+//line parser.y:12
 type yySymType struct {
 	yys int
 	s   string
@@ -455,54 +454,54 @@ yydefault:
 
 	case 4:
 		yyDollar = yyS[yypt-4 : yypt+1]
-//line parser.y:39
+//line parser.y:38
 		{
-			if _, ok := symtab[yyDollar[1].s]; ok {
+			if _, ok := symtab.rules[yyDollar[1].s]; ok {
 				log.Fatalf("duplicate symbol %q", yyDollar[1].s)
 			}
-			symtab[yyDollar[1].s] = yyDollar[3].choices
+			symtab.rules[yyDollar[1].s] = yyDollar[3].choices
 			yyVAL.s = yyDollar[1].s
 		}
 	case 5:
 		yyDollar = yyS[yypt-3 : yypt+1]
-//line parser.y:47
+//line parser.y:46
 		{
 			yyDollar[1].choices.add(yyDollar[3].seqs)
 			yyVAL.choices = yyDollar[1].choices
 		}
 	case 6:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:48
+//line parser.y:47
 		{
 			yyVAL.choices = &choice{c: []generator{yyDollar[1].seqs}}
 		}
 	case 7:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line parser.y:51
+//line parser.y:50
 		{
 			yyDollar[1].seqs.add(yyDollar[2].g)
 			yyVAL.seqs = yyDollar[1].seqs
 		}
 	case 8:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:52
+//line parser.y:51
 		{
 			yyVAL.seqs = &sequence{s: []generator{yyDollar[1].g}}
 		}
 	case 9:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:55
+//line parser.y:54
 		{
 			yyVAL.g = terminal(yyDollar[1].s)
 		}
 	case 10:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line parser.y:56
+//line parser.y:55
 		{
-			v, ok := vars[yyDollar[1].s]
+			v, ok := symtab.vars[yyDollar[1].s]
 			if !ok {
 				v = &variable{v: yyDollar[1].s}
-				vars[yyDollar[1].s] = v
+				symtab.vars[yyDollar[1].s] = v
 			}
 			yyVAL.g = v
 		}
