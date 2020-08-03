@@ -11,7 +11,6 @@ package main
 // TODO(dgryski): update syntax to match cup?
 // TODO(dgryski): support "\"" and "\n" in lexer
 // TODO(dgryski): refactor to unit tests
-// TODO(dgryski): remove globals
 // TODO(dgryski): add code generation
 
 import (
