@@ -208,9 +208,8 @@ func typecheck(symtab *symbolTable, seen map[string]bool, sym generator) error {
 	return nil
 }
 
+// cheapest finds the least expensive expansion for when the recursion depth is reached
 func cheapest(symtab *symbolTable, seen map[string]bool, sym generator) (g generator, d int) {
-	// typecheck the tree rooted at sym
-	// look for undefined symbols in the rules
 
 	switch s := sym.(type) {
 	case terminal:
@@ -255,6 +254,7 @@ func cheapest(symtab *symbolTable, seen map[string]bool, sym generator) (g gener
 	return sym, 0
 }
 
+// optimize updates the grammar to be more efficient
 func optimize(sym generator) (generator, bool) {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
@@ -268,6 +268,7 @@ func optimize(sym generator) (generator, bool) {
 	case *variable:
 		ss := symtab.rules[s.v]
 
+		// replace a variable with the terminal it represents
 		switch r := ss.(type) {
 		case terminal:
 			return r, true
@@ -284,6 +285,7 @@ func optimize(sym generator) (generator, bool) {
 		return sym, false
 
 	case *choice:
+		// replace a choice with a single alternative with that alternative
 		if len(s.c) == 1 {
 			g, _ := optimize(s.c[0])
 			return g, true
@@ -298,6 +300,7 @@ func optimize(sym generator) (generator, bool) {
 		return sym, changed
 
 	case *sequence:
+		// replace a sequence with a single item with that item
 		if len(s.s) == 1 {
 			g, _ := optimize(s.s[0])
 			return g, true
@@ -310,6 +313,7 @@ func optimize(sym generator) (generator, bool) {
 			changed = changed || b
 		}
 
+		// merge adjacent terminals
 		for i := 0; i < len(s.s)-1; i++ {
 			t1, ok := s.s[i].(terminal)
 			if !ok {
@@ -326,6 +330,7 @@ func optimize(sym generator) (generator, bool) {
 			changed = true
 		}
 
+		// replace a variable with the sequence it represents
 		for i := 0; i < len(s.s); i++ {
 			v, ok := s.s[i].(*variable)
 			if !ok {
@@ -346,6 +351,7 @@ func optimize(sym generator) (generator, bool) {
 			changed = true
 		}
 
+		// remove epsilons from this rule
 		for i := 0; i < len(s.s); i++ {
 			if _, ok := s.s[i].(epsilon); !ok {
 				continue
@@ -365,9 +371,8 @@ func optimize(sym generator) (generator, bool) {
 	return sym, false
 }
 
+// unused finds all the unused rules
 func unused(symtab *symbolTable, seen map[string]bool, sym generator) {
-	// typecheck the tree rooted at sym
-	// look for undefined symbols in the rules
 
 	switch s := sym.(type) {
 	case terminal:
