@@ -70,8 +70,8 @@ func main() {
 		return
 	}
 
-	g, ok := symtab.rules["START"]
-	if !ok {
+	g := symtab.StartRule()
+	if g == nil {
 		log.Fatal("unable to find START")
 	}
 
@@ -105,7 +105,7 @@ func main() {
 
 	seen = make(map[string]bool)
 	seen["START"] = true
-	g = symtab.rules["START"]
+	g = symtab.StartRule()
 	unused(symtab, seen, g)
 
 	var remove []string
@@ -119,7 +119,7 @@ func main() {
 		delete(symtab.rules, k)
 	}
 
-	g = symtab.rules["START"]
+	g = symtab.StartRule()
 	seen = make(map[string]bool)
 	cheapest(symtab, seen, g)
 

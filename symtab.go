@@ -11,3 +11,7 @@ func newSymbolTable() *symbolTable {
 		vars:  make(map[string]*variable),
 	}
 }
+
+func (sym *symbolTable) StartRule() generator {
+	return sym.rules["START"]
+}
