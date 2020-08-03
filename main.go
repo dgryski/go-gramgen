@@ -74,11 +74,13 @@ func main() {
 		log.Fatal("unable to find START")
 	}
 
+	// phase 1: typecheck
 	seen := make(map[string]bool)
 	if err := typecheck(symtab, seen, g); err != nil {
 		log.Fatal(err)
 	}
 
+	// phase 2; optimize
 	changed := true
 	for changed {
 		changed = false
@@ -93,6 +95,7 @@ func main() {
 		v.rule = symtab.rules[k]
 	}
 
+	// phase 3: prune unused rules
 	seen = make(map[string]bool)
 	seen["START"] = true
 	g = symtab.StartRule()
@@ -109,6 +112,7 @@ func main() {
 		delete(symtab.rules, k)
 	}
 
+	// phase 4: determine cheapest rule
 	g = symtab.StartRule()
 	seen = make(map[string]bool)
 	cheapest(symtab, seen, g)
