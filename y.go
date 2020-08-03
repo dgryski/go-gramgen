@@ -456,10 +456,10 @@ yydefault:
 		yyDollar = yyS[yypt-4 : yypt+1]
 //line parser.y:38
 		{
-			if _, ok := symtab.rules[yyDollar[1].s]; ok {
-				log.Fatalf("duplicate symbol %q", yyDollar[1].s)
+			if err := symtab.addRule(yyDollar[1].s, yyDollar[3].choices); err != nil {
+				log.Fatalln("error: ", err)
 			}
-			symtab.rules[yyDollar[1].s] = yyDollar[3].choices
+
 			yyVAL.s = yyDollar[1].s
 		}
 	case 5:
@@ -498,12 +498,7 @@ yydefault:
 		yyDollar = yyS[yypt-1 : yypt+1]
 //line parser.y:55
 		{
-			v, ok := symtab.vars[yyDollar[1].s]
-			if !ok {
-				v = &variable{v: yyDollar[1].s}
-				symtab.vars[yyDollar[1].s] = v
-			}
-			yyVAL.g = v
+			yyVAL.g = symtab.addVariable(yyDollar[1].s)
 		}
 	}
 	goto yystack /* stack new state and value */

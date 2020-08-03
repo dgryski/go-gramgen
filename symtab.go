@@ -15,3 +15,28 @@ func newSymbolTable() *symbolTable {
 func (sym *symbolTable) StartRule() generator {
 	return sym.rules["START"]
 }
+
+type duplicateRuleError string
+
+func (e duplicateRuleError) Error() string {
+	return "duplicate rule: " + string(e)
+}
+
+func (sym *symbolTable) addRule(r string, g generator) error {
+	if _, ok := sym.rules[r]; ok {
+		return duplicateRuleError(r)
+	}
+
+	sym.rules[r] = g
+	return nil
+}
+
+func (sym *symbolTable) addVariable(v string) *variable {
+	vptr, ok := sym.vars[v]
+	if !ok {
+		vptr = &variable{v: v}
+		sym.vars[v] = vptr
+	}
+
+	return vptr
+}
