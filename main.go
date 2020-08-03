@@ -6,6 +6,7 @@ package main
 
 // TODO(dgryski): add range, repeat
 // TODO(dgryski): add variables to rules
+// TODO(dgryski): add rule weights
 // TODO(dgryski): what else to pick from dharma syntax?
 // TODO(dgryski): common library of useful items
 // TODO(dgryski): update syntax to match cup?
