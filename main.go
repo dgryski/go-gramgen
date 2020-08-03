@@ -75,12 +75,6 @@ func main() {
 		log.Fatal("unable to find START")
 	}
 
-	for k := range symtab.rules {
-		idx := len(symtabToIdx)
-		symtabToIdx[k] = idx
-	}
-	symtabIdx = make([]generator, len(symtabToIdx))
-
 	seen := make(map[string]bool)
 	if err := typecheck(symtab, seen, g); err != nil {
 		log.Fatal(err)
@@ -97,10 +91,7 @@ func main() {
 	}
 
 	for k, v := range symtab.vars {
-		idx := symtabToIdx[k]
-		v.idx = idx
-		ss := symtab.rules[v.v]
-		symtabIdx[idx] = ss
+		v.rule = symtab.rules[k]
 	}
 
 	seen = make(map[string]bool)
@@ -131,7 +122,7 @@ func main() {
 		sort.Strings(keys)
 
 		for _, k := range keys {
-			fmt.Printf("%v := %v\n", k, symtabIdx[symtab.vars[k].idx])
+			fmt.Printf("%v := %v\n", k, symtab.vars[k].rule)
 		}
 
 		return
@@ -261,9 +252,6 @@ func cheapest(symtab *symbolTable, seen map[string]bool, sym generator) (g gener
 	return sym, 0
 }
 
-var symtabToIdx = make(map[string]int)
-var symtabIdx []generator
-
 func optimize(sym generator) (generator, bool) {
 	// typecheck the tree rooted at sym
 	// look for undefined symbols in the rules
@@ -341,7 +329,7 @@ func optimize(sym generator) (generator, bool) {
 				continue
 			}
 
-			ss := symtabIdx[v.idx]
+			ss := symtab.rules[v.v]
 			sseq, ok := ss.(*sequence)
 			if !ok {
 				continue

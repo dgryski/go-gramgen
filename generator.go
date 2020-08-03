@@ -26,7 +26,7 @@ func (t terminal) String() string {
 
 type variable struct {
 	v     string
-	idx   int
+	rule  generator
 	cheap generator
 }
 
@@ -35,8 +35,7 @@ func (v variable) generate(w io.StringWriter, depth int) {
 		v.cheap.generate(w, 0)
 		return
 	}
-	g := symtabIdx[v.idx]
-	g.generate(w, depth-1)
+	v.rule.generate(w, depth-1)
 }
 
 func (v variable) String() string {
