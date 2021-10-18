@@ -6,10 +6,10 @@ package main
 
 // TODO(dgryski): add range, repeat
 // TODO(dgryski): add variables to rules
-// TODO(dgryski): add rule weights
+// TODO(dgryski): add rule weights: go-discreterand
 // TODO(dgryski): what else to pick from dharma syntax?
 // TODO(dgryski): common library of useful items
-// TODO(dgryski): update syntax to match cup?
+// TODO(dgryski): update syntax to match cup? http://www2.cs.tum.edu/projects/cup/index.php
 // TODO(dgryski): support "\"" and "\n" in lexer
 // TODO(dgryski): refactor to unit tests
 // TODO(dgryski): add code generation
